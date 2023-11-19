@@ -1,12 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerFlower : MonoBehaviour
 {
     public static PlayerFlower instance;
 
     public float movementSpeed;
+    public GameObject turretFlower;
 
     bool isMoving;
     bool isMoved;
@@ -19,6 +22,16 @@ public class PlayerFlower : MonoBehaviour
     int currentY = 0;
 
     bool isTileFull = false;
+
+    public float abilityCooldown;
+    public float abilityCooldownCounter;
+
+    public Image ability;
+
+    public Image[] hearths;
+
+    public int life = 3;
+
     void Awake()
     {
         instance = this;
@@ -27,6 +40,16 @@ public class PlayerFlower : MonoBehaviour
     private void Update()
     {
         Movement();
+        abilityCooldownCounter = Mathf.Clamp(abilityCooldownCounter + Time.deltaTime, 0, abilityCooldown);
+        ability.fillAmount = abilityCooldownCounter / abilityCooldown;
+        for(int i = life; i < 3;i++)
+        {
+            hearths[i].color = new Color(hearths[i].color.r, hearths[i].color.g, hearths[i].color.b, 0.5f);
+        }
+        if(life <= 0)
+        {
+            SceneManager.LoadScene(0);
+        }
     }
 
     void Movement()
@@ -101,7 +124,21 @@ public class PlayerFlower : MonoBehaviour
                 }
             }
         }
-        
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            if(abilityCooldownCounter >= abilityCooldown)
+            {
+                RaycastHit2D hit = Physics2D.Raycast((Vector2)transform.position + new Vector2(0, 1) * GeneralManager.instance.tileSize * GeneralManager.instance.spriteBound, Vector3.forward);
+                if (hit.transform != null)
+                {
+                    turretFlower.transform.position = (Vector2)transform.position + new Vector2(0, 1) * GeneralManager.instance.tileSize * GeneralManager.instance.spriteBound;
+                }
+                abilityCooldownCounter = 0;
+            }
+
+        }
+
         if (isMoving && !isMoved)
         {
             transform.localScale = (Vector2)transform.localScale - Vector2.one * movementSpeed * Time.deltaTime;
